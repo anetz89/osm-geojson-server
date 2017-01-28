@@ -14,7 +14,7 @@
             server.start(data);
         })
         .catch(function(e) {
-            log('error during osm import');
-            log(e);
+            log.error('error during osm import');
+            log.error(e);
         });
 }());

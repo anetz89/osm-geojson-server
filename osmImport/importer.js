@@ -3,7 +3,7 @@
 
     const
         q = require('q'),
-        log = require('./../util/logger.js'),
+        log = require('npmlog'),
         config = require('./../config.js').osmImport,
         OverpassFrontend = require('overpass-frontend'),
         overpass = new OverpassFrontend(config.url);
@@ -17,7 +17,7 @@
         overpass.BBoxQuery(config.query, config.boundingBox, config.apiOptions, featureCallback,
             function(err) {
                 if (err) {
-                    log(err);
+                    log.verbose(err);
                 }
                 deferred.resolve(result);
             });

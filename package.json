@@ -30,6 +30,7 @@
     "escape-string-regexp": "^1.0.5",
     "geojson-slicer": "^0.0.1",
     "npmlog": "^4.0.2",
+    "osmtile2bound": "^0.1.0",
     "overpass-frontend": "^0.1.0",
     "q": "^1.4.1"
   }

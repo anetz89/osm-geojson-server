@@ -7,7 +7,7 @@
         slicer = require('geojson-slicer'),
         http = require('http'),
         url = require('url'),
-        tile2bound = require('./../util/tile2bound.js'),
+        tile2bound = require('osmtile2bound'),
         escapeRegex = /['"]/g;
 
     log.level = 'verbose';

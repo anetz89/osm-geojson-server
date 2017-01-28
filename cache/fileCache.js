@@ -2,11 +2,11 @@
     'use strict';
 
     const
-        log = require('./../util/logger.js'),
+        log = require('npmlog'),
         config = require('./../config.js').cache.file;
 
     function store(data) {
-        log(data.length);
+        log.verbose(data.length);
     }
 
     module.exports = {
