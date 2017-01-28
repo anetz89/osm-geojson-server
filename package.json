@@ -1,0 +1,36 @@
+{
+  "name": "osm-geojson-server",
+  "version": "0.0.1",
+  "description": "Server component to provide cached OSM Data in geoJSON format",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anetz89/osm-geojson-server.git"
+  },
+  "keywords": [
+    "osm",
+    "server",
+    "geojson",
+    "map",
+    "cache"
+  ],
+  "author": "anetz89",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/anetz89/osm-geojson-server/issues"
+  },
+  "homepage": "https://github.com/anetz89/osm-geojson-server#readme",
+  "devDependencies": {
+    "eslint": "^3.14.1"
+  },
+  "dependencies": {
+    "escape-string-regexp": "^1.0.5",
+    "geojson-slicer": "^0.0.1",
+    "npmlog": "^4.0.2",
+    "overpass-frontend": "^0.1.0",
+    "q": "^1.4.1"
+  }
+}
