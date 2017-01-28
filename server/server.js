@@ -6,10 +6,11 @@
         http = require('http'),
         url = require('url'),
         log = require('npmlog'),
-        slicer = require('geojson-slicer'),
-        tile2bound = require('osmtile2bound'),
-        config = require('./../config.js').server,
+        config = require('./../config.js'),
+        serverConfig = config.server,
         logLevel = require('./../config.js').base.logLevel,
+        slicer = require('geojson-slicer')(config.geojsonSlicer),
+        tile2bound = require('osmtile2bound'),
         escapeRegex = /['"]/g;
 
     let dataSource;
@@ -19,9 +20,10 @@
     function stringify(featureGroup, jsonp) {
         let featureString = JSON.stringify(featureGroup);
 
-        featureString = featureString.replace(escapeRegex, '\\$&');
 
         if (jsonp) {
+            featureString = featureString.replace(escapeRegex, '\\$&');
+
             return jsonp + "('" + featureString + "')";
         }
 
@@ -75,9 +77,9 @@
         });
 
         // IP defaults to 127.0.0.1
-        server.listen(config.port);
+        server.listen(serverConfig.port);
 
-        log.info('Server running at http://127.0.0.1:' + config.port + '/');
+        log.info('Server running at http://127.0.0.1:' + serverConfig.port + '/');
     }
 
     module.exports = {

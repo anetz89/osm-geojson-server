@@ -6,37 +6,32 @@
         log = require('npmlog'),
         config = require('./../config.js').osmImport,
         logLevel = require('./../config.js').base.logLevel,
-        OverpassFrontend = require('overpass-frontend'),
-        overpass = new OverpassFrontend(config.url);
-
-    let result = [];
+        overpass = require('query-overpass');
 
     log.level = logLevel;
 
-    function runImport() {
-        let deferred = q.defer();
+    function getQuery(bounds) {
+        var bbstring = bounds.join(',');
 
-        // eslint-disable-next-line new-cap
-        overpass.BBoxQuery(config.query, config.boundingBox, config.apiOptions, featureCallback,
-            function(err) {
-                if (err) {
-                    log.verbose(err);
-                }
-                deferred.resolve(result);
-            });
-
-        return deferred.promise;
+        return config.query.replace(config.bbPlaceholder, bbstring);
     }
 
-    function featureCallback(error, feature) {
-        if (error) {
-            return log(error);
-        }
-        if (!feature) {
-            return log('feature callback without feature');
-        }
-        // eslint-disable-next-line new-cap
-        result.push(feature.GeoJSON());
+    function runImport(bounds) {
+        let deferred = q.defer(),
+            query = getQuery(bounds);
+
+        log.info('OVERPASS REQUEST: ' + query);
+
+        overpass(query, function(err, data) {
+            if (err) {
+                log.verbose(err.message);
+
+                return deferred.reject(err);
+            }
+            deferred.resolve(data.features);
+        });
+
+        return deferred.promise;
     }
 
     module.exports = {

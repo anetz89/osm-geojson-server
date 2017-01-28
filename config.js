@@ -1,34 +1,19 @@
 (function() {
     'use strict';
 
-    const OverpassFrontend = require('overpass-frontend');
-
     // common configuration file that is used throughout the module
     module.exports = {
         base : {
+            // [48.1, 11.5, 48.2, 11.6]
+            initialBoundingBox : [48.13, 11.54, 48.16, 11.56],
             logLevel : 'verbose'
         },
         osmImport : {
             // overpass url
             url : 'http://www.overpass-api.de/api/interpreter',
-            query : 'node[amenity=restaurant]',
-            boundingBox : {
-                getSouthWest : function() {
-                    return {
-                        lat : 48.1,
-                        lng : 11.5
-                    };
-                },
-                getNorthEast : function() {
-                    return {
-                        lat : 48.2,
-                        lng : 11.6
-                    };
-                }
-            },
-            apiOptions : {
-                properties : OverpassFrontend.ALL
-            }
+            query : '[out:json];(way[building]($$$bb$$$);' +
+                'way[highway]($$$bb$$$););(._;>;);out;',
+            bbPlaceholder : /\$\$\$bb\$\$\$/g
         },
         cache : {
             // file cache. stores/reads data to/from files
@@ -38,7 +23,10 @@
             }
         },
         server : {
-            port : '8765'
+            port : 8765
+        },
+        geojsonSlicer : {
+            cutFeatures : false
         }
     };
 

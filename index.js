@@ -5,12 +5,13 @@
         log = require('npmlog'),
         osmImport = require('./osmImport/importer.js'),
         server = require('./server/server.js'),
+        config = require('./config.js'),
         logLevel = require('./config.js').base.logLevel,
         cache = require('./cache/fileCache.js');
 
     log.level = logLevel;
 
-    osmImport.run()
+    osmImport.run(config.base.initialBoundingBox)
         .then(function(data) {
             cache.store(data);
 
