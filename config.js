@@ -5,6 +5,9 @@
 
     // common configuration file that is used throughout the module
     module.exports = {
+        base : {
+            logLevel : 'verbose'
+        },
         osmImport : {
             // overpass url
             url : 'http://www.overpass-api.de/api/interpreter',
@@ -24,7 +27,7 @@
                 }
             },
             apiOptions : {
-                properties: OverpassFrontend.ALL
+                properties : OverpassFrontend.ALL
             }
         },
         cache : {
@@ -35,7 +38,7 @@
             }
         },
         server : {
-
+            port : '8765'
         }
     };
 

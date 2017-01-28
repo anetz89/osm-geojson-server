@@ -5,10 +5,13 @@
         q = require('q'),
         log = require('npmlog'),
         config = require('./../config.js').osmImport,
+        logLevel = require('./../config.js').base.logLevel,
         OverpassFrontend = require('overpass-frontend'),
         overpass = new OverpassFrontend(config.url);
 
     let result = [];
+
+    log.level = logLevel;
 
     function runImport() {
         let deferred = q.defer();

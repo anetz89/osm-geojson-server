@@ -3,58 +3,84 @@
 
     // Load the http module to create an http server.
     const
-        log = require('npmlog'),
-        slicer = require('geojson-slicer'),
         http = require('http'),
         url = require('url'),
+        log = require('npmlog'),
+        slicer = require('geojson-slicer'),
         tile2bound = require('osmtile2bound'),
+        config = require('./../config.js').server,
+        logLevel = require('./../config.js').base.logLevel,
         escapeRegex = /['"]/g;
 
-    log.level = 'verbose';
     let dataSource;
 
-    function escape(stringToEscape) {
-        return stringToEscape.replace(escapeRegex, '\\$&')
+    log.level = logLevel;
+
+    function stringify(featureGroup, jsonp) {
+        let featureString = JSON.stringify(featureGroup);
+
+        featureString = featureString.replace(escapeRegex, '\\$&');
+
+        if (jsonp) {
+            return jsonp + "('" + featureString + "')";
+        }
+
+        return featureString;
     }
 
     function buildResponse(response, bound, jsonp) {
         let featureGroup = {
-            "type": "FeatureCollection",
-            "features": slicer.slice(dataSource, bound)
-        };
+                type : 'FeatureCollection',
+                features : slicer.slice(dataSource, bound)
+            },
+            headerInfo = {
+                'Content-Type' : 'application/json'
+            };
 
         if (jsonp) {
-            response.writeHead(200, {"Content-Type": "application/js"});
-            response.end(jsonp + "('" + escape(JSON.stringify(featureGroup)) + "')");
-        } else {
-            response.writeHead(200, {"Content-Type": "application/json"});
-            response.end(JSON.stringify(featureGroup));
+            headerInfo['Content-Type'] = 'application/js';
         }
+
+        response.writeHead(200, headerInfo);
+        response.end(stringify(featureGroup, jsonp));
+    }
+
+    function url2tileData(urlString) {
+        let parts = urlString.split('/'),
+            lastIdx = parts.length - 1;
+
+        if (lastIdx < 3) {
+            // invalid url passed
+            return [];
+        }
+
+        return [parts[lastIdx - 1], parts[lastIdx].split('.')[0], parts[lastIdx - 2]];
     }
 
     function startServer(data) {
         dataSource = data;
-        // Configure our HTTP server to respond with Hello World to all requests.
-        let server = http.createServer(function (request, response) {
 
-            let parts = request.url.split('/'),
+        let server = http.createServer(function(request, response) {
+
+            let tileData = url2tileData(request.url),
                 req = url.parse(request.url, true);
 
-            if (parts.length === 4) {
-                buildResponse(response, tile2bound(parts[2], parts[3].split('.')[0], parts[1]),
+            if (tileData.length) {
+                buildResponse(response, tile2bound(tileData[0], tileData[1], tileData[2]),
                     req.query.callback);
+
                 return;
             }
             response.writeHead(404);
         });
 
-        // Listen on port 8000, IP defaults to 127.0.0.1
-        server.listen(8765);
+        // IP defaults to 127.0.0.1
+        server.listen(config.port);
 
-        log.info("Server running at http://127.0.0.1:8765/");
+        log.info('Server running at http://127.0.0.1:' + config.port + '/');
     }
 
     module.exports = {
         start : startServer
-    }
+    };
 }());
