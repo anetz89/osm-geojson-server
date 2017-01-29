@@ -8,7 +8,8 @@
         server = require('./server/server.js'),
         config = require('./config.js'),
         logLevel = require('./config.js').base.logLevel,
-        cache = require('./cache/fileCache.js');
+        cache = require('./cache/fileCache.js'),
+        tileChecker = require('./util/tileChecker.js');
 
     log.level = logLevel;
 
@@ -23,11 +24,11 @@
     }
 
     if (cache.has(tile)) {
-        cache.load(tile, function(error, data) {
+        cache.loadCompleteZoom(tile.z, function(error) {
             if (error) {
                 return throwError(error);
             }
-            server.start(data.features);
+            server.start();
         });
     } else {
         osmImport.run(tile)
@@ -39,6 +40,8 @@
                     if (!success) {
                         return throwError('storing the data did not work');
                     }
+                    tileChecker.addTile(tile, data);
+
                     server.start(data.features);
                 });
 

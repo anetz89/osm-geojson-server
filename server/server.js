@@ -9,11 +9,12 @@
         config = require('./../config.js'),
         serverConfig = config.server,
         logLevel = require('./../config.js').base.logLevel,
+        tileChecker = require('./../util/tileChecker.js'),
+        osmImport = require('./../osmImport/importer.js'),
+        cache = require('./../cache/fileCache.js'),
         slicer = require('geojson-slicer')(config.geojsonSlicer),
         tile2bound = require('osmtile2bound'),
         escapeRegex = /['"]/g;
-
-    let dataSource;
 
     log.level = logLevel;
 
@@ -30,10 +31,11 @@
         return featureString;
     }
 
-    function buildResponse(response, bound, jsonp) {
+    function buildResponse(response, tile, jsonp) {
+        // log.verbose('buildResponse', tileChecker.get(tile), tile2bound(tile));
         let featureGroup = {
                 type : 'FeatureCollection',
-                features : slicer.slice(dataSource, bound)
+                features : slicer.slice(tileChecker.get(tile), tile2bound(tile))
             },
             headerInfo = {
                 'Content-Type' : 'application/json'
@@ -66,25 +68,79 @@
         };
     }
 
-    function startServer(data) {
-        dataSource = data;
+    function loadAdditionalTiles(tileData, req, response) {
+        let necessaryTiles = tileChecker.getNecessaryTiles(tileData),
+            deferred;
 
+        if (necessaryTiles.length > 1) {
+            log.error('unable to load multiple tiles (for now)');
+
+            return rejectRequest(response, 'too many tiles need to be fetched');
+        }
+
+        deferred = osmImport.run(necessaryTiles[0]);
+
+        tileChecker.addOnHold(necessaryTiles[0], deferred);
+
+        deferred
+            .then(function(data) {
+                cache.store(data, necessaryTiles[0], function(error, success) {
+                    if (error) {
+                        return rejectRequest(response, error);
+                    }
+                    if (!success) {
+                        return rejectRequest(response, 'storing the data did not work');
+                    }
+
+                    return buildResponse(response, tileData, req.query.callback);
+                });
+
+            })
+            .catch(function(e) {
+                log.error('error during osm import');
+                log.error(e);
+
+                return rejectRequest(response, 'storing the data did not work');
+            });
+
+    }
+
+    function rejectRequest(response, reason) {
+        response.writeHead(404);
+        response.end(reason);
+    }
+
+    function startServer() {
         let server = http.createServer(function(request, response) {
 
             let tileData = url2tileData(request.url),
                 req = url.parse(request.url, true);
 
             if (tileData.valid) {
-                log.verbose(tileData.x + ', ' + tileData.y + ', ' + tileData.z);
-                log.verbose(tile2bound(tileData));
+                if (tileChecker.getCoverTiles(tileData).length) {
+                    // all available, just return response
+                    return buildResponse(response, tileData, req.query.callback);
+                }
+                log.verbose('not covered');
+                if (tileChecker.isTileOnHold(tileData)) {
+                    // another tile already requested the necessary tile wait for it to be loaded
+                    log.verbose('on hold');
+                    tileChecker.isTileOnHold(tileData).then(function(requ, resp, tdata) {
+                        return function() {
+                            buildResponse(resp, tdata, requ.query.callback);
+                        };
+                    }(request, response, tileData));
 
-                buildResponse(response, tile2bound(tileData),
-                    req.query.callback);
+                    return;
+                }
+                log.verbose('not on hold');
+                // tile needs to be loaded
+                loadAdditionalTiles(tileData, req, response);
 
                 return;
             }
-            response.writeHead(404);
-            response.end('tile data not valid');
+
+            return rejectRequest(response, 'tile data not valid');
         });
 
         // IP defaults to 127.0.0.1

@@ -36,6 +36,7 @@
     "q": "^1.4.1",
     "query-overpass": "^1.1.0",
     "read-json": "^1.0.3",
+    "recursive-readdir-sync": "^1.0.6",
     "write-json": "^0.2.2"
   }
 }
