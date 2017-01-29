@@ -5,7 +5,7 @@
     module.exports = {
         base : {
             // [48.1, 11.5, 48.2, 11.6]
-            initialBoundingBox : [48.13, 11.54, 48.16, 11.56],
+            initialBoundingBox : [[48.130, 11.55], [48.135, 11.555]],
             logLevel : 'verbose'
         },
         osmImport : {

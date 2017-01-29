@@ -53,10 +53,17 @@
 
         if (lastIdx < 3) {
             // invalid url passed
-            return [];
+            return {
+                valid : false
+            };
         }
 
-        return [parts[lastIdx - 1], parts[lastIdx].split('.')[0], parts[lastIdx - 2]];
+        return {
+            valid : true,
+            x : parts[lastIdx - 1],
+            y : parts[lastIdx].split('.')[0],
+            z : parts[lastIdx - 2]
+        };
     }
 
     function startServer(data) {
@@ -67,13 +74,17 @@
             let tileData = url2tileData(request.url),
                 req = url.parse(request.url, true);
 
-            if (tileData.length) {
-                buildResponse(response, tile2bound(tileData[0], tileData[1], tileData[2]),
+            if (tileData.valid) {
+                log.verbose(tileData.x + ', ' + tileData.y + ', ' + tileData.z);
+                log.verbose(tile2bound(tileData));
+
+                buildResponse(response, tile2bound(tileData),
                     req.query.callback);
 
                 return;
             }
             response.writeHead(404);
+            response.end('tile data not valid');
         });
 
         // IP defaults to 127.0.0.1

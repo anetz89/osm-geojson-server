@@ -27,12 +27,15 @@
     "eslint": "^3.14.1"
   },
   "dependencies": {
+    "bound2osmtile": "^0.1.2",
     "escape-string-regexp": "^1.0.5",
+    "fs-extra": "^2.0.0",
     "geojson-slicer": "^0.0.1",
     "npmlog": "^4.0.2",
-    "osmtile2bound": "^0.1.0",
-    "overpass-frontend": "^0.1.0",
+    "osmtile2bound": "^0.1.1",
     "q": "^1.4.1",
-    "query-overpass": "^1.1.0"
+    "query-overpass": "^1.1.0",
+    "read-json": "^1.0.3",
+    "write-json": "^0.2.2"
   }
 }

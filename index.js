@@ -3,6 +3,7 @@
 
     const
         log = require('npmlog'),
+        bound2tile = require('bound2osmtile'),
         osmImport = require('./osmImport/importer.js'),
         server = require('./server/server.js'),
         config = require('./config.js'),
@@ -11,14 +12,40 @@
 
     log.level = logLevel;
 
-    osmImport.run(config.base.initialBoundingBox)
-        .then(function(data) {
-            cache.store(data);
+    let tile = bound2tile(config.base.initialBoundingBox, {
+        zoom : 13
+    });
 
-            server.start(data);
-        })
-        .catch(function(e) {
-            log.error('error during osm import');
-            log.error(e);
+    function throwError(error) {
+        log.error(error);
+
+        return;
+    }
+
+    if (cache.has(tile)) {
+        cache.load(tile, function(error, data) {
+            if (error) {
+                return throwError(error);
+            }
+            server.start(data.features);
         });
+    } else {
+        osmImport.run(tile)
+            .then(function(data) {
+                cache.store(data, tile, function(error, success) {
+                    if (error) {
+                        return throwError(error);
+                    }
+                    if (!success) {
+                        return throwError('storing the data did not work');
+                    }
+                    server.start(data.features);
+                });
+
+            })
+            .catch(function(e) {
+                throwError('error during osm import');
+                throwError(e);
+            });
+    }
 }());
