@@ -34,32 +34,6 @@
         return true;
     }
 
-    function addOnHold(tile, deferred) {
-        log.verbose('addOnHold' + tile.x.toString() + tile.y.toString());
-        tilesOnHold[tile.x.toString() + tile.y.toString()] = deferred;
-
-        deferred.then(function(t) {
-            return function(data) {
-                addTile(t, data);
-                setTimeout(function() {
-                    log.verbose('time to clean up');
-                    delete tilesOnHold[t.x.toString() + t.y.toString()];
-                }, 30000);
-            };
-        }({
-            x : tile.x,
-            y : tile.y,
-            z : tile.z
-        }));
-    }
-
-    function isTileOnHold(tile) {
-        // TODO might be more than one elment
-        let necTile = getNecessaryTiles(tile)[0];
-
-        return tilesOnHold[necTile.x.toString() + necTile.y.toString()] || false;
-    }
-
     function getCoverTiles(origTile) {
         let tiles = getNecessaryTiles(origTile),
             allAvailable = true;
@@ -164,8 +138,6 @@
     module.exports = {
         get : get,
         addTile : addTile,
-        addOnHold : addOnHold,
-        isTileOnHold : isTileOnHold,
         getCoverTiles : getCoverTiles,
         getNecessaryTiles : getNecessaryTiles
     };

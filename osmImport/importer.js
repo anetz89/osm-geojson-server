@@ -2,7 +2,7 @@
     'use strict';
 
     const
-        q = require('q'),
+        async = require('async'),
         log = require('npmlog'),
         tile2bound = require('osmtile2bound'),
         config = require('./../config.js').osmImport,
@@ -12,28 +12,50 @@
 
     log.level = logLevel;
 
+    // set up queue
+    let runningRequests = {},
+        queryQueue = async.queue(function(query, done) {
+            log.info('OVERPASS REQUEST: ' + query);
+
+            overpass(query, function(err, data) {
+                if (err) {
+                    log.verbose(err.message);
+
+                    return done(err.message);
+                }
+
+                // notify all callbacks
+                runningRequests[query].forEach(function(cb) {
+                    cb(null, data);
+                });
+
+                setTimeout(function() {
+                    delete runningRequests[query];
+                }, 1000)
+
+                done();
+            });
+        // only two in parallel as Overpass API does not allow more parallel connections
+        }, 2);
+
     function getQuery(bounds) {
         var bbstring = bounds.join(',');
 
         return config.query.replace(config.bbPlaceholder, bbstring);
     }
 
-    function runImport(tile) {
-        let deferred = q.defer(),
-            query = getQuery(adjustBound(tile2bound(tile)));
+    function runImport(tile, callback) {
+        let query = getQuery(adjustBound(tile2bound(tile)));
 
-        log.info('OVERPASS REQUEST: ' + query);
+        if (runningRequests.hasOwnProperty(query)) {
+            runningRequests[query].push(callback);
 
-        overpass(query, function(err, data) {
-            if (err) {
-                log.verbose(err.message);
+            return false;
+        }
+        runningRequests[query] = [callback];
+        queryQueue.push(query);
 
-                return deferred.reject(err);
-            }
-            deferred.resolve(data);
-        });
-
-        return deferred.promise;
+        return true;
     }
 
     module.exports = {

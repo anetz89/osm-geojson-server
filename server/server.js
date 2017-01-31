@@ -68,25 +68,18 @@
         };
     }
 
-    function loadAdditionalTiles(tileData, req, response) {
-        let necessaryTiles = tileChecker.getNecessaryTiles(tileData),
-            deferred;
+    function getImportCallback(response, req, tileData, requestTile) {
+        return function(error, data) {
+            if (error) {
+                log.error('error during osm import');
+                log.error(JSON.stringify(error));
 
-        if (necessaryTiles.length > 1) {
-            log.error('unable to load multiple tiles (for now)');
-
-            return rejectRequest(response, 'too many tiles need to be fetched');
-        }
-
-        deferred = osmImport.run(necessaryTiles[0]);
-
-        tileChecker.addOnHold(necessaryTiles[0], deferred);
-
-        deferred
-            .then(function(data) {
-                cache.store(data, necessaryTiles[0], function(error, success) {
+                return rejectRequest(response, 'error during osm import');
+            }
+            if (!cache.has(requestTile)) {
+                cache.store(data, requestTile, function(err, success) {
                     if (error) {
-                        return rejectRequest(response, error);
+                        return rejectRequest(response, err);
                     }
                     if (!success) {
                         return rejectRequest(response, 'storing the data did not work');
@@ -94,15 +87,21 @@
 
                     return buildResponse(response, tileData, req.query.callback);
                 });
+            }
+        };
+    }
 
-            })
-            .catch(function(e) {
-                log.error('error during osm import');
-                log.error(e);
+    function loadAdditionalTiles(tileData, req, response) {
+        let necessaryTiles = tileChecker.getNecessaryTiles(tileData);
 
-                return rejectRequest(response, 'storing the data did not work');
-            });
+        if (necessaryTiles.length > 1) {
+            log.error('unable to load multiple tiles (for now)');
 
+            return rejectRequest(response, 'too many tiles need to be fetched');
+        }
+        necessaryTiles.forEach(function(necTile) {
+            osmImport.run(necTile, getImportCallback(response, req, tileData, necTile));
+        });
     }
 
     function rejectRequest(response, reason) {
@@ -121,19 +120,6 @@
                     // all available, just return response
                     return buildResponse(response, tileData, req.query.callback);
                 }
-                log.verbose('not covered');
-                if (tileChecker.isTileOnHold(tileData)) {
-                    // another tile already requested the necessary tile wait for it to be loaded
-                    log.verbose('on hold');
-                    tileChecker.isTileOnHold(tileData).then(function(requ, resp, tdata) {
-                        return function() {
-                            buildResponse(resp, tdata, requ.query.callback);
-                        };
-                    }(request, response, tileData));
-
-                    return;
-                }
-                log.verbose('not on hold');
                 // tile needs to be loaded
                 loadAdditionalTiles(tileData, req, response);
 

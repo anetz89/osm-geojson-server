@@ -27,7 +27,8 @@
     "eslint": "^3.14.1"
   },
   "dependencies": {
-    "bound2osmtile": "^0.1.2",
+    "async": "^2.1.4",
+    "bound2osmtile": "^0.2.0",
     "escape-string-regexp": "^1.0.5",
     "fs-extra": "^2.0.0",
     "geojson-slicer": "^0.0.1",
