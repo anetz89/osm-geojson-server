@@ -32,6 +32,7 @@
     "escape-string-regexp": "^1.0.5",
     "fs-extra": "^2.0.0",
     "geojson-slicer": "^0.0.1",
+    "merge": "^1.2.0",
     "npmlog": "^4.0.2",
     "osmtile2bound": "^0.1.1",
     "q": "^1.4.1",

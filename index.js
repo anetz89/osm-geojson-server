@@ -7,8 +7,10 @@
         osmImport = require('./osmImport/importer.js'),
         server = require('./server/server.js'),
         config = require('./config.js'),
+        featureConfig = require('./featureConfig.js'),
         logLevel = require('./config.js').base.logLevel,
         cache = require('./cache/fileCache.js'),
+        configUtil = require('./util/config.js'),
         tileChecker = require('./util/tileChecker.js');
 
     log.level = logLevel;
@@ -22,6 +24,7 @@
 
         return;
     }
+    configUtil.setConfig(featureConfig);
 
     if (cache.has(tile)) {
         cache.loadCompleteZoom(tile.z, function(error) {

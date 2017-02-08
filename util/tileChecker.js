@@ -3,8 +3,7 @@
 
     let log = require('npmlog'),
         zoomLevel,
-        availableTiles = {},
-        tilesOnHold = {};
+        availableTiles = {};
 
     function normalizeTile(tile) {
         return {

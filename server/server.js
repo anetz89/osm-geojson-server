@@ -13,6 +13,8 @@
         osmImport = require('./../osmImport/importer.js'),
         cache = require('./../cache/fileCache.js'),
         slicer = require('geojson-slicer')(config.geojsonSlicer),
+        configUtil = require('./../util/config.js'),
+        prepareData = require('./../util/prepareData.js'),
         tile2bound = require('osmtile2bound'),
         escapeRegex = /['"]/g;
 
@@ -35,7 +37,9 @@
         // log.verbose('buildResponse', tileChecker.get(tile), tile2bound(tile));
         let featureGroup = {
                 type : 'FeatureCollection',
-                features : slicer.slice(tileChecker.get(tile), tile2bound(tile))
+                features : slicer.slice(tileChecker.get(tile), tile2bound(tile), function(feature) {
+                    return configUtil.getConfig(tile.z, feature) !== null;
+                })
             },
             headerInfo = {
                 'Content-Type' : 'application/json'
@@ -47,6 +51,15 @@
 
         response.writeHead(200, headerInfo);
         response.end(stringify(featureGroup, jsonp));
+    }
+
+    function buildConfigResponse(response, jsonp) {
+        let headerInfo = {
+            'Content-Type' : 'application/json'
+        };
+
+        response.writeHead(200, headerInfo);
+        response.end(stringify(configUtil.getConfig(), jsonp));
     }
 
     function url2tileData(urlString) {
@@ -68,6 +81,7 @@
         };
     }
 
+
     function getImportCallback(response, req, tileData, requestTile) {
         return function(error, data) {
             if (error) {
@@ -77,6 +91,7 @@
                 return rejectRequest(response, 'error during osm import');
             }
             if (!cache.has(requestTile)) {
+                data = prepareData(data);
                 cache.store(data, requestTile, function(err, success) {
                     if (error) {
                         return rejectRequest(response, err);
@@ -111,7 +126,6 @@
 
     function startServer() {
         let server = http.createServer(function(request, response) {
-
             let tileData = url2tileData(request.url),
                 req = url.parse(request.url, true);
 
@@ -124,6 +138,8 @@
                 loadAdditionalTiles(tileData, req, response);
 
                 return;
+            } else {
+                return buildConfigResponse(response, req.query.callback);
             }
 
             return rejectRequest(response, 'tile data not valid');

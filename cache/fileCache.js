@@ -8,6 +8,7 @@
         fs = require('fs-extra'),
         readDir = require('recursive-readdir-sync'),
         tileChecker = require('./../util/tileChecker.js'),
+        prepareData = require('./../util/prepareData.js'),
         config = require('./../config.js').cache.file;
 
     log.level = require('./../config.js').base.logLevel;
@@ -54,6 +55,8 @@
                     if (error) {
                         return log.error(error);
                     }
+
+                    data = prepareData(data);
 
                     tileChecker.addTile(t, data);
                     log.verbose('read ' + getFileName(t));
