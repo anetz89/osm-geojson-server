@@ -10,6 +10,7 @@
         },
         osmImport : {
             // overpass url
+            active : true,
             url : 'http://www.overpass-api.de/api/interpreter',
             query : '[out:json];(way[building]($$$bb$$$);' +
                 'way[highway]($$$bb$$$););(._;>;);out;',

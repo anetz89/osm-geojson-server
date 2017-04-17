@@ -5,9 +5,9 @@
         async = require('async'),
         log = require('npmlog'),
         tile2bound = require('osmtile2bound'),
-        config = require('./../config.js').osmImport,
-        adjustBound = require('./../util/adjustBound.js'),
-        logLevel = require('./../config.js').base.logLevel,
+        config = require('./../../config.js').osmImport,
+        adjustBound = require('./../../util/adjustBound.js'),
+        logLevel = require('./../../config.js').base.logLevel,
         overpass = require('query-overpass');
 
     log.level = logLevel;
@@ -20,6 +20,12 @@
             overpass(query, function(err, data) {
                 if (err) {
                     log.verbose(err.message);
+
+
+                    // notify all callbacks
+                    runningRequests[query].forEach(function(cb) {
+                        cb(err);
+                    });
 
                     return done(err.message);
                 }
@@ -50,12 +56,12 @@
         if (runningRequests.hasOwnProperty(query)) {
             runningRequests[query].push(callback);
 
-            return false;
+            return runningRequests[query];
         }
         runningRequests[query] = [callback];
         queryQueue.push(query);
 
-        return true;
+        return runningRequests[query];
     }
 
     module.exports = {

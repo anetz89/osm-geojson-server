@@ -10,7 +10,7 @@
         serverConfig = config.server,
         logLevel = require('./../config.js').base.logLevel,
         tileChecker = require('./../util/tileChecker.js'),
-        osmImport = require('./../osmImport/importer.js'),
+        importer = require('./../import/importer.js'),
         cache = require('./../cache/fileCache.js'),
         slicer = require('geojson-slicer')(config.geojsonSlicer),
         configUtil = require('./../util/config.js'),
@@ -115,7 +115,7 @@
             return rejectRequest(response, 'too many tiles need to be fetched');
         }
         necessaryTiles.forEach(function(necTile) {
-            osmImport.run(necTile, getImportCallback(response, req, tileData, necTile));
+            importer.run(necTile, getImportCallback(response, req, tileData, necTile));
         });
     }
 

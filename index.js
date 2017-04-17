@@ -4,7 +4,7 @@
     const
         log = require('npmlog'),
         bound2tile = require('bound2osmtile'),
-        osmImport = require('./osmImport/importer.js'),
+        importer = require('./import/importer.js'),
         server = require('./server/server.js'),
         config = require('./config.js'),
         featureConfig = require('./featureConfig.js'),
@@ -34,24 +34,24 @@
             server.start();
         });
     } else {
-        osmImport.run(tile)
-            .then(function(data) {
-                cache.store(data, tile, function(error, success) {
-                    if (error) {
-                        return throwError(error);
-                    }
-                    if (!success) {
-                        return throwError('storing the data did not work');
-                    }
-                    tileChecker.addTile(tile, data);
-
-                    server.start(data.features);
-                });
-
-            })
-            .catch(function(e) {
+        importer.run(tile, function(e, data) {
+            if (e) {
                 throwError('error during osm import');
                 throwError(e);
+                return;
+            }
+            cache.store(data, tile, function(error, success) {
+                if (error) {
+                    return throwError(error);
+                }
+                if (!success) {
+                    return throwError('storing the data did not work');
+                }
+                tileChecker.addTile(tile, data);
+
+                server.start(data.features);
             });
+
+        });
     }
 }());
