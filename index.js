@@ -49,7 +49,7 @@
                 }
                 tileChecker.addTile(tile, data);
 
-                server.start(data.features);
+                server.start();
             });
 
         });

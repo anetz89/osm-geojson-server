@@ -77,11 +77,6 @@
         if (callback) {
             callback('no such file found');
         }
-        // let deferred = q.defer();
-
-        // deferred.reject('no such file found');
-
-        // return deferred.promise;
     }
 
 

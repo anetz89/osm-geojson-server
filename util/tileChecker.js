@@ -17,7 +17,7 @@
     function addTile(tile, data) {
         tile = normalizeTile(tile);
 
-        if (!zoomLevel) {
+        if (!zoomLevel && zoomLevel !== 0) {
             zoomLevel = tile.z;
         }
         if (zoomLevel !== tile.z) {
@@ -107,7 +107,7 @@
     }
 
     function getNecessaryTiles(tile) {
-        if (!zoomLevel) {
+        if (!zoomLevel && zoomLevel !== 0) {
             log.error('no internal zoomLevel available');
             return [];
         }

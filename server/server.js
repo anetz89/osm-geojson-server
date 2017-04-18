@@ -35,10 +35,14 @@
 
     function buildResponse(response, tile, jsonp) {
         // log.verbose('buildResponse', tileChecker.get(tile), tile2bound(tile));
+
         let featureGroup = {
                 type : 'FeatureCollection',
                 features : slicer.slice(tileChecker.get(tile), tile2bound(tile), function(feature) {
-                    return configUtil.getConfig(tile.z, feature) !== null;
+                    if (configUtil.getConfig(tile.z, feature) !== null) {
+                        log.warn('feature without configuration: ' + feature.properties.typeLabel);
+                    }
+                    return true;
                 })
             },
             headerInfo = {
@@ -50,6 +54,7 @@
         }
 
         response.writeHead(200, headerInfo);
+
         response.end(stringify(featureGroup, jsonp));
     }
 
@@ -93,7 +98,7 @@
             if (!cache.has(requestTile)) {
                 data = prepareData(data);
                 cache.store(data, requestTile, function(err, success) {
-                    if (error) {
+                    if (err) {
                         return rejectRequest(response, err);
                     }
                     if (!success) {
@@ -138,11 +143,9 @@
                 loadAdditionalTiles(tileData, req, response);
 
                 return;
-            } else {
-                return buildConfigResponse(response, req.query.callback);
             }
 
-            return rejectRequest(response, 'tile data not valid');
+            return buildConfigResponse(response, req.query.callback);
         });
 
         // IP defaults to 127.0.0.1
